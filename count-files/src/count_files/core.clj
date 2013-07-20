@@ -1,16 +1,18 @@
 (ns count-files.core
+  "Core package of the count-files utility."
   (:require [me.raynes.fs :as fs]
             [clojure.string :as str :only (replace-first)]
             [clojure.tools.cli :as cmdline :only (cli)])
   (:gen-class :main true))
 
 (defn find-files
-  "Returns a sequence of all files found within a directory tree"
+  "Returns a sequence of all files found within a directory tree."
   [path]
   (fs/find-files* path fs/file?))
 
-(defn file-components [f]
-  "Return a map containing the extension, name, size and path of a given file"
+(defn file-components 
+  "Return a map containing the extension, name, size and path of a given file."
+  [f]
   { :extension (fs/extension f),
     :name (.getName f),
     :size (.length f),
@@ -32,10 +34,11 @@
   [path]
   (filter fs/directory? (.listFiles path)))
 
-(defn run
+(defn count-files
+  "Count the files of the base directory given on the command line
+  (as the first argument). If the --walk switch was specified, counts files
+  within each child directory; otherwise count starts at the base directory."
   [opts args]
-  ;; (doseq [f (find-files basedir*)] (println f))
-  ;; (do (println (frequencies-by-ext basedir*)))
 
   (let [basedir  (first args)
         basedir* (-> basedir fs/file fs/normalized-path)]
@@ -48,6 +51,7 @@
     )))
 
 (defn print-help
+  "Displays help and sample usage, preceeded by an optional message."
   ([banner]
     (print-help banner "Count all files of a directory tree, grouping them by their extension."))
   ([banner msg]
@@ -55,7 +59,7 @@
       (str/replace-first banner "Usage:" "Usage:\n\n count-files [switches] basedir")))))
 
 (defn -main
-  "Count all files of a directory tree, grouping them by their extension"
+  "Command-line interpreter and main entry point."
   [& args]
 
   ;; work around dangerous default behaviour in Clojure
@@ -69,6 +73,6 @@
     (cond
       (:help opts) ((print-help banner) (System/exit 0))
       (empty? args) ((print-help banner "Base directory is a required argument.") (System/exit 1))
-      :else (run opts args)
+      :else (count-files opts args)
   ))
 )
