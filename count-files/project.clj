@@ -1,6 +1,6 @@
 (defproject count-files "0.1.0"
   :description "Count files in a directory tree, grouped by their extension"
-  :url "https://github.com/olange/toolbox/count-files"
+  :url "https://github.com/olange/toolbox/tree/master/count-files"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [
