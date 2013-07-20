@@ -1,6 +1,6 @@
 # Count files
 
-[API docs](https://github.com/olange/toolbox/blob/master/count-files/docs/uberdoc.html)
+[API docs](https://github.com/olange/toolbox/blob/master/count-files/doc/uberdoc.html)
 
 Count files in a directory tree, grouped by their extension.
 
