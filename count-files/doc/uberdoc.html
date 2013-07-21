@@ -3028,11 +3028,11 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>count-files -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">count-files</h1><h2 class="project-version">0.1.0</h2><br /><p>Count files in a directory tree, grouped by their extension</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">org.clojure/tools.cli</td><td class="dotted"><hr /></td><td class="dep-version">0.2.2</td></tr><tr><td class="dep-name">me.raynes/fs</td><td class="dotted"><hr /></td><td class="dep-version">1.4.4</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#count-files.core">count-files.core</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#count-files.core" name="count-files.core"><h1 class="project-name">count-files.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Core package of the count-files utility.</p>
+</script><title>count-files -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">count-files</h1><h2 class="project-version">0.1.1</h2><br /><p>Count files in a directory tree, grouped by their extension</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">org.clojure/tools.cli</td><td class="dotted"><hr /></td><td class="dep-version">0.2.2</td></tr><tr><td class="dep-name">me.raynes/fs</td><td class="dotted"><hr /></td><td class="dep-version">1.4.5</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#count-files.core">count-files.core</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#count-files.core" name="count-files.core"><h1 class="project-name">count-files.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Core package of the count-files utility.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns count-files.core
   (:require [me.raynes.fs :as fs]
-            [clojure.string :as str :only (replace-first)]
+            [clojure.string :as str :only (join replace-first)]
             [clojure.tools.cli :as cmdline :only (cli)])
   (:gen-class :main true))</pre></td></tr><tr><td class="docs"><p>Returns a sequence of all files found within a directory tree.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn find-files
@@ -3055,21 +3055,28 @@ net.brehaut.ClojureTools = (function (SH) {
     (frequencies (map grouping-fn components))))</pre></td></tr><tr><td class="docs"><p>Returns a sequence of all children directories of a given directory</p>
 </td><td class="codes"><pre class="brush: clojure">(defn children-dirs
   [path]
-  (filter fs/directory? (.listFiles path)))</pre></td></tr><tr><td class="docs"><p>Count the files of the base directory given on the command line
+  (filter fs/directory? (.listFiles path)))</pre></td></tr><tr><td class="docs"><p>Format the entries of an hashmap as tab separated keys and values.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn- format-as-tsv
+  [hmap]
+  (letfn [(format-entry [kv] (str (or (key kv) &quot;(other)&quot;) &quot;\t&quot; (val kv)))]
+    (str/join &quot;\t&quot; (map format-entry (sort hmap)))))</pre></td></tr><tr><td class="docs"><p>Count the files of the base directory, grouped by their extension.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn count-files-by-ext
+  [basedir]
+  (count-files-by :extension basedir))</pre></td></tr><tr><td class="docs"><p>Count the files of the base directory given on the command line
   (as the first argument). If the --walk switch was specified, counts files
   within each child directory; otherwise count starts at the base directory.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn count-files
+</td><td class="codes"><pre class="brush: clojure">(defn do-count-files
   [opts args]
   (let [basedir  (first args)
         basedir* (-&gt; basedir fs/file fs/normalized-path)]
-    (println (str &quot;Counting files per extension within directory tree &quot; basedir*))
+    (println (str &quot;Counting files within &quot; basedir*))
     (if (:walk opts)
-      (doseq [d (children-dirs basedir*)]
-        (println (str d &quot;/: \t&quot; (count-files-by :extension d))))
-      (println (count-files-by :extension basedir*)))))</pre></td></tr><tr><td class="docs"><p>Displays help and sample usage, preceeded by an optional message.</p>
+      (doseq [dir (children-dirs basedir*)]
+        (println (str dir &quot;/:\t&quot; (format-as-tsv (count-files-by-ext dir)))))
+      (println (format-as-tsv (count-files-by-ext basedir*))))))</pre></td></tr><tr><td class="docs"><p>Displays help and sample usage, preceeded by an optional message.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn print-help
   ([banner]
-    (print-help banner &quot;Count all files of a directory tree, grouping them by their extension.&quot;))
+    (print-help banner &quot;Count all files in a directory tree, grouping them by their extension.&quot;))
   ([banner msg]
     (println (str msg &quot;\n&quot;
       (str/replace-first banner &quot;Usage:&quot; &quot;Usage:\n\n count-files [switches] basedir&quot;)))))</pre></td></tr><tr><td class="docs"><p>Command-line interpreter and main entry point.</p>
@@ -3085,5 +3092,5 @@ net.brehaut.ClojureTools = (function (SH) {
     (cond
       (:help opts) ((print-help banner) (System/exit 0))
       (empty? args) ((print-help banner &quot;Base directory is a required argument.&quot;) (System/exit 1))
-      :else (count-files opts args))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+      :else (do-count-files opts args))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
