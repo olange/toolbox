@@ -1,4 +1,4 @@
-(defproject count-files "0.1.0"
+(defproject count-files "0.1.1"
   :description "Count files in a directory tree, grouped by their extension"
   :url "https://github.com/olange/toolbox/tree/master/count-files"
   :license {:name "Eclipse Public License"
@@ -7,7 +7,7 @@
   :dependencies [
     [org.clojure/clojure "1.5.1"]
     [org.clojure/tools.cli "0.2.2"]
-    [me.raynes/fs "1.4.4"]]
+    [me.raynes/fs "1.4.5"]]
 
   :main count-files.core
 
