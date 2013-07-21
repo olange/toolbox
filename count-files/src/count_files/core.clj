@@ -1,7 +1,7 @@
 (ns count-files.core
   "Core package of the count-files utility."
   (:require [me.raynes.fs :as fs]
-            [clojure.string :as str :only (replace-first)]
+            [clojure.string :as str :only (join replace-first)]
             [clojure.tools.cli :as cmdline :only (cli)])
   (:gen-class :main true))
 
@@ -34,7 +34,18 @@
   [path]
   (filter fs/directory? (.listFiles path)))
 
-(defn count-files
+(defn- format-as-tsv
+  "Format the entries of an hashmap as tab separated keys and values."
+  [hmap]
+  (letfn [(format-entry [kv] (str (or (key kv) "(other)") "\t" (val kv)))]
+    (str/join "\t" (map format-entry (sort hmap)))))
+
+(defn count-files-by-ext
+  "Count the files of the base directory, grouped by their extension."
+  [basedir]
+  (count-files-by :extension basedir))
+
+(defn do-count-files
   "Count the files of the base directory given on the command line
   (as the first argument). If the --walk switch was specified, counts files
   within each child directory; otherwise count starts at the base directory."
@@ -42,18 +53,17 @@
 
   (let [basedir  (first args)
         basedir* (-> basedir fs/file fs/normalized-path)]
-    (println (str "Counting files per extension within directory tree " basedir*))
-
+    (println (str "Counting files within " basedir*))
     (if (:walk opts)
-      (doseq [d (children-dirs basedir*)]
-        (println (str d "/: \t" (count-files-by :extension d))))
-      (println (count-files-by :extension basedir*))
+      (doseq [dir (children-dirs basedir*)]
+        (println (str dir "/:\t" (format-as-tsv (count-files-by-ext dir)))))
+      (println (format-as-tsv (count-files-by-ext basedir*)))
     )))
 
 (defn print-help
   "Displays help and sample usage, preceeded by an optional message."
   ([banner]
-    (print-help banner "Count all files of a directory tree, grouping them by their extension."))
+    (print-help banner "Count all files in a directory tree, grouping them by their extension."))
   ([banner msg]
     (println (str msg "\n"
       (str/replace-first banner "Usage:" "Usage:\n\n count-files [switches] basedir")))))
@@ -73,6 +83,6 @@
     (cond
       (:help opts) ((print-help banner) (System/exit 0))
       (empty? args) ((print-help banner "Base directory is a required argument.") (System/exit 1))
-      :else (count-files opts args)
+      :else (do-count-files opts args)
   ))
 )
